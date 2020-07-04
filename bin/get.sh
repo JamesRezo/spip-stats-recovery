@@ -6,6 +6,10 @@
 
 STATS_SPIP_NET="https://stats.spip.net/spip.php?page=stats.json"
 
+# Archive stats.json file if exists.
+[[ -f stats.json ]] && LAST_POLL=$(date -r stats.json '+%Y/%m/%d/%H%M%S') || true
+[[ -f stats.json ]] && mkdir -p $(dirname "$LAST_POLL.json") && mv stats.json "$LAST_POLL.json" || true
+
 # Get SPIP Versions exposed
 curl -s "${STATS_SPIP_NET}" | jq '[.versions[]|.version]' > stats.json
 
@@ -30,5 +34,8 @@ echo -n "Verified sites:"
 jq '[.[]|.sites] | add' stats.json | xargs printf "% 6d\n"
 echo -n "PHP exposed   :"
 jq '[.[].php[]|.sites] | add' stats.json | xargs printf "% 6d\n"
+
+# Check diff with last poll
+[[ -f "$LAST_POLL.json" ]] && diff -u "$LAST_POLL.json" stats.json  || true
 
 exit 0
