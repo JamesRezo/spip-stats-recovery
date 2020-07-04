@@ -7,8 +7,8 @@
 STATS_SPIP_NET="https://stats.spip.net/spip.php?page=stats.json"
 
 # Archive stats.json file if exists.
-[[ -f stats.json ]] && LAST_POLL=$(date -r stats.json '+%Y/%m/%d/%H%M%S') || true
-[[ -f stats.json ]] && mkdir -p $(dirname "$LAST_POLL.json") && mv stats.json "$LAST_POLL.json" || true
+[[ -f stats.json ]] && LAST_POLL=$(date -r stats.json '+%Y/%m/%d/%H%M%S').json
+[[ -f stats.json ]] && mkdir -p "$(dirname "$LAST_POLL")" && cp -p stats.json "$LAST_POLL"
 
 # Get SPIP Versions exposed
 curl -s "${STATS_SPIP_NET}" | jq '[.versions[]|.version]' > stats.json
@@ -30,12 +30,21 @@ done
 echo "$TMP_FILES" | xargs jq -s '.' > stats.json
 echo "$TMP_FILES" | xargs rm
 
-echo -n "Verified sites:"
-jq '[.[]|.sites] | add' stats.json | xargs printf "% 6d\n"
-echo -n "PHP exposed   :"
-jq '[.[].php[]|.sites] | add' stats.json | xargs printf "% 6d\n"
+SPIP=$(jq '[.[]|.sites] | add' stats.json | xargs printf "% 6d")
+PHP=$(jq '[.[].php[]|.sites] | add' stats.json | xargs printf "% 6d")
+RATIO=$(echo "$PHP" | jq '. / '"$SPIP"' * 100' | xargs printf "% 9.2f")"%"
+echo "Verified sites:$SPIP"
+echo "PHP exposed   :$PHP"
+echo "Ratio         :$RATIO"
 
 # Check diff with last poll
-[[ -f "$LAST_POLL.json" ]] && diff -u "$LAST_POLL.json" stats.json  || true
+[[ -f "$LAST_POLL" ]] && if diff -u "$LAST_POLL" stats.json > diff.patch; then
+    echo "No change since last poll."
+    rm "$LAST_POLL"
+else
+    echo "Changes to store! See diff.patch"
+    cat diff.patch
+    # TODO rm diff.patch
+fi
 
 exit 0
