@@ -1,4 +1,4 @@
-.DEFAULT_GOAL: poll
+.DEFAULT_GOAL: poll archive
 
 .PHONY: poll
 
@@ -7,8 +7,11 @@
 	@echo "Doing one poll..."
 
 spip.json: .polling
-	@poll
+	@poll $@
 	@rm -f .polling
 	@echo "Done."
 
 poll: .polling spip.json
+
+archive:
+	@archive spip.json php.json

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Usage : bin/poll.sh
+# Usage : poll [file]
 # Description : Get JSON files from https://stats.spip.net
 # Needs curl, jq
 
@@ -8,6 +8,8 @@
 source tools
 
 [[ $DEBUG ]] && echo "poll:$0"
+
+POLL_FILE=${1:-spip.json}
 
 STATS_SPIP_NET="https://stats.spip.net/spip.php?page=stats.json"
 
@@ -27,7 +29,8 @@ do
     }'
     TMP_FILES="$TMP_FILES stats.$v.json"
 done
-slurpTmpFilesTo spip.json
+makeDirForFile "$POLL_FILE"
+slurpTmpFilesTo "$POLL_FILE"
 
 rm -f versions.json
 

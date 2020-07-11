@@ -86,6 +86,43 @@ function getFileFromRemote
     tr -d '[:space:]' < "${VALID}" > "${DEST}"
 }
 
+# Inverse matrix spip/php in php/spip sites number
+# Usage : spip2php
+#         spip2php path/to/sourcefile
+#         spip2php path/to/sourcefile path/to/destfile
+# Description : turn a .spip.php into a .php.spip Json schema aggregated by PHP versions
+function spip2php
+{
+    local SRC=${1:-spip.json}
+    local DEST=${2:-php.json}
+
+    #TODO errors if SRC does not exist.
+
+    # Step 1 : Inversion .spip.php -> .php.spip
+    for v in $(jq -r '.[]|.version' "$SRC");
+    do
+        jq '.[]|select(.version=="'"$v"'")|.php[]|{version, spip: [{version: "'"$v"'", sites}]}' "$SRC" > "src.$v.json"
+        TMP_FILES="$TMP_FILES src.$v.json"
+    done
+    slurpTmpFilesTo "$DEST"
+
+    # Step 2 : Aggregation by PHP versions
+    for v in $(jq -r '.[]|.version' "$DEST");
+    do
+        jq '[.[]|select(.version=="'"$v"'")|.spip[]]|{version: "'"$v"'", sites: [.[]|.sites]|add, spip: .}' "$DEST" > "dest.$v.json"
+        TMP_FILES="${TMP_FILES} dest.$v.json"
+    done
+    slurpTmpFilesTo "$DEST"
+}
+
+function archiveBasename
+{
+    local BASENAME
+    BASENAME=$(basename "$1")
+
+    echo "${BASENAME%.*}"
+}
+
 TMP_FILES=
 CACHE_PATH=${CACHE_PATH:-.cache/_file_}
 CACHE_RAW_FILE=${CACHE_PATH/_file_/raw._url_.json}
