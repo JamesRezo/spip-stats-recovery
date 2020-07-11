@@ -1,9 +1,13 @@
 FROM alpine
 
-RUN apk add --no-cache bash curl jq
+RUN apk add --no-cache bash make curl jq
 
-ADD bin/get.sh /get.sh
+COPY bin/tools.sh /usr/local/bin/tools
+COPY bin/poll.sh /usr/local/bin/poll
+COPY bin/Makefile /Makefile
 
-ENTRYPOINT [ "/get.sh" ]
+ENTRYPOINT [ "make", "-f", "/Makefile"]
 
 WORKDIR /build
+
+CMD [ "poll" ]
