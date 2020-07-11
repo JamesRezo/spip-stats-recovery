@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Usage : archive
-# Description :
+# Usage : archive [spip.json] [php.json]
+# Description : Store changes if any is detected
 # Needs jq
 
 # shellcheck source=bin/tools.sh
