@@ -4,7 +4,7 @@
 # Description : Helpers
 # Needs curl, jq
 
-# Usage : slugify string
+# Usage : slugify [string]
 # Description : https://example.org/path/script?V=1.0 -> https-example-org-path-script-v-1-0
 # Note : Saddly, slugify does not transliterate non ascii letters
 function slugify
@@ -41,12 +41,27 @@ function slurpTmpFilesTo
     TMP_FILES=
 }
 
+# Guess a filename from an url
+# Usage : getDefaultFilename url
+# Descripton : use a slugified basename of url with magick deletion of "spip.php?page="
+#              use hostname if no basename (i.e. https://example.org -> example-org.json)
+function getDefaultFilename
+{
+    local URL=$1
+
+    # Error if URL not provided
+    [[ -z "$URL" ]] && >&2 echo "URL not provided." && exit 1
+
+    echo "$(slugify "$(basename "${URL/.json/}" | sed "s/spip\.php\?page=//")").json"
+}
+
 # Usage : getFileFromRemote url
 #         getFileFromRemote url path/to/file
 #         getFileFromRemote url path/to/file "jq filter"
 # Description : test, retrieve, check and compress a remote json file to local filesystem
 #               files are cached in .cache directory by default (see CACHE_PATH env variable)
 #               Errors output on STDERR may be :
+#                   "URL not provided." if called without any parameters
 #                   "Bad remote file." if HTTP status is not 200
 #                   "Bad format." if jq transformation produces some errors
 #               DEBUG=1 getFileFromRemote url will print stages on STDOUT
@@ -59,10 +74,11 @@ function getFileFromRemote
     local RAW
     local VALID
 
-    #TODO errors if url not provided
+    # Error if URL not provided
+    [[ -z "$URL" ]] && >&2 echo "URL not provided." && exit 1
 
-    #TODO check DEST parameter. If not provided, use basename of url with magick deletion of "spip.php?page="
-    #     if no basename (i.e. url like https://example.org) use default file name (suglified %{http_host}.json)
+    # Guess DEST parameter, if not provided
+    [[ -z "$DEST" ]] && DEST=$(getDefaultFilename "$URL")
 
     # Get HTTP Status. 200 expected
     [[ $DEBUG ]] && echo "Testing ${URL}"
@@ -88,39 +104,32 @@ function getFileFromRemote
 
 # Inverse matrix spip/php in php/spip sites number
 # Usage : spip2php
-#         spip2php path/to/sourcefile
-#         spip2php path/to/sourcefile path/to/destfile
+#         spip2php path/to/spipfile
+#         spip2php path/to/spipfile path/to/phpfile
 # Description : turn a .spip.php into a .php.spip Json schema aggregated by PHP versions
 function spip2php
 {
-    local SRC=${1:-spip.json}
-    local DEST=${2:-php.json}
+    local SPIP_JSON=${1:-spip.json}
+    local PHP_JSON=${2:-php.json}
 
-    #TODO errors if SRC does not exist.
+    # Error if SPIP_JSON does not exist.
+    [[ -z "$SPIP_JSON" ]] && >&2 echo "Bad SPIP JSON file '$SPIP_JSON'." && exit 1
 
     # Step 1 : Inversion .spip.php -> .php.spip
-    for v in $(jq -r '.[]|.version' "$SRC");
+    for v in $(jq -r '.[]|.version' "$SPIP_JSON");
     do
-        jq '.[]|select(.version=="'"$v"'")|.php[]|{version, spip: [{version: "'"$v"'", sites}]}' "$SRC" > "src.$v.json"
-        TMP_FILES="$TMP_FILES src.$v.json"
+        jq '.[]|select(.version=="'"$v"'")|.php[]|{version, spip: [{version: "'"$v"'", sites}]}' "$SPIP_JSON" > "spip.$v.json"
+        TMP_FILES="$TMP_FILES spip.$v.json"
     done
-    slurpTmpFilesTo "$DEST"
+    slurpTmpFilesTo "$PHP_JSON"
 
     # Step 2 : Aggregation by PHP versions
-    for v in $(jq -r '.[]|.version' "$DEST");
+    for v in $(jq -r '.[]|.version' "$PHP_JSON");
     do
-        jq '[.[]|select(.version=="'"$v"'")|.spip[]]|{version: "'"$v"'", sites: [.[]|.sites]|add, spip: .}' "$DEST" > "dest.$v.json"
-        TMP_FILES="${TMP_FILES} dest.$v.json"
+        jq '[.[]|select(.version=="'"$v"'")|.spip[]]|{version: "'"$v"'", sites: [.[]|.sites]|add, spip: .}' "$PHP_JSON" > "php.$v.json"
+        TMP_FILES="${TMP_FILES} php.$v.json"
     done
-    slurpTmpFilesTo "$DEST"
-}
-
-function archiveBasename
-{
-    local BASENAME
-    BASENAME=$(basename "$1")
-
-    echo "${BASENAME%.*}"
+    slurpTmpFilesTo "$PHP_JSON"
 }
 
 TMP_FILES=

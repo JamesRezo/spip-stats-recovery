@@ -13,3 +13,8 @@ docker run -v $(pwd):/build jamesrezo/myspipnetstats
 # Store changes if any is detected
 docker run -v $(pwd):/build jamesrezo/myspipnetstats archive
 ```
+
+```bash
+# Display last poll summary
+docker run -v $(pwd):/build jamesrezo/myspipnetstats print
+```

@@ -1,18 +1,13 @@
-.DEFAULT_GOAL: poll archive print
+.PHONY: poll archive print
 
-.PHONY: poll
-
-.polling:
-	@touch $@
+poll:
+	@touch .polling
 	@echo "Doing one poll..."
-
-spip.json: .polling
-	@poll $@
-	@rm -f .polling
+	@poll spip.json
 	@echo "Done."
-	@print $@
-
-poll: .polling spip.json
+	@print spip.json
+	@rm -f .polling
+	@touch .polled
 
 archive:
 	@archive spip.json php.json
