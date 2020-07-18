@@ -13,4 +13,4 @@ ENTRYPOINT [ "make", "-f", "/Makefile"]
 
 WORKDIR /build
 
-CMD [ "poll" ]
+CMD [ "archive" ]
