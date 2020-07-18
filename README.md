@@ -18,3 +18,8 @@ docker run -v $(pwd):/build jamesrezo/myspipnetstats poll-only
 # Display last poll summary
 docker run -v $(pwd):/build jamesrezo/myspipnetstats print
 ```
+
+```bash
+# Compile archives in CSV Files
+docker run -v $(pwd):/build jamesrezo/myspipnetstats compile
+```
