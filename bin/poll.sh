@@ -9,6 +9,10 @@ source tools
 
 [[ $DEBUG ]] && echo "poll:$0"
 
+[[ -f .polling ]] && echo "Polling ... Try again in a few seconds." && exit 0
+touch .polling
+echo "Doing one poll..."
+
 POLL_FILE=${1:-spip.json}
 
 STATS_SPIP_NET="https://stats.spip.net/spip.php?page=stats.json"
@@ -33,5 +37,8 @@ makeDirForFile "$POLL_FILE"
 slurpTmpFilesTo "$POLL_FILE"
 
 rm -f versions.json
+echo "Done."
+rm -f .polling
+touch .polled
 
 exit 0

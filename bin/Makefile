@@ -1,16 +1,15 @@
-.PHONY: poll archive print
+.PHONY: poll-only archive print
 
-poll:
-	@touch .polling
-	@echo "Doing one poll..."
-	@poll spip.json
-	@echo "Done."
-	@print spip.json
-	@rm -f .polling
-	@touch .polled
-
-archive:
+archive: .polled
 	@archive spip.json php.json
+	@rm -f .polled
+
+poll-only: .polled
+	@rm -f .polled
 
 print:
+	@print spip.json
+
+.polled:
+	@poll spip.json
 	@print spip.json
