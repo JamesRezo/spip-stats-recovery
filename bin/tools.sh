@@ -74,28 +74,41 @@ function getFileFromRemote
     local RAW
     local VALID
 
+    makeDirForFile "$CACHE_RAW_FILE"
+    makeDirForFile "$CACHE_VALID_FILE"
+
     # Error if URL not provided
     [[ -z "$URL" ]] && >&2 echo "URL not provided." && exit 1
 
     # Guess DEST parameter, if not provided
     [[ -z "$DEST" ]] && DEST=$(getDefaultFilename "$URL")
 
-    # Get HTTP Status. 200 expected
+    # Get HTTP Status. 200/304 expected
     [[ $DEBUG ]] && echo "Testing ${URL}"
-    HTTP_STATUS=$(curl --head --write-out '%{http_code}' --connect-timeout 1 --output /dev/null --silent "${URL}")
-    [[ $HTTP_STATUS -ne 200 ]] && >&2 echo "Bad remote file." && exit 1
-    _slug="$(slugify "$URL")"
 
-    makeDirForFile "$CACHE_PATH"
+    _slug="$(slugify "$URL")"
+    RAW=${CACHE_RAW_FILE/_url_/$_slug}
+    if [ -f "$RAW" ]; then
+        # HTTP 304 management date as RFC7232 format
+        DATE_FORMAT=$(TZ=":GMT" date -r "${RAW}" '+%a, %d %b %Y %H:%M:%S %Z')
+        [[ $DEBUG ]] && echo "Comparing with ${RAW} at ${DATE_FORMAT}"
+        HTTP_STATUS=$(curl --head --header "If-Modified-Since: ${DATE_FORMAT}" --write-out '%{http_code}' --connect-timeout 1 --output /dev/null --silent "${URL}")
+    else
+        HTTP_STATUS=$(curl --head --write-out '%{http_code}' --connect-timeout 1 --output /dev/null --silent "${URL}")
+    fi
+    [[ $DEBUG ]] && echo "HTTP_STATUS ${HTTP_STATUS}"
+    [[ $HTTP_STATUS -eq 304 ]] && exit 0
+    [[ $HTTP_STATUS -ne 200 ]] && >&2 echo "Bad remote file." && exit 1
 
     # Get Json main file to extract actual exposed versions
-    RAW=${CACHE_RAW_FILE/_url_/$_slug}
     [[ $DEBUG  ]] && echo "Downloading into ${RAW}"
     curl --request GET --connect-timeout 1 --output "${RAW}" --silent "${URL}"
+
     # Validate format
     VALID=${CACHE_VALID_FILE/_url_/$_slug}
     [[ $DEBUG  ]] && echo "Validating into ${VALID}"
     ! jq "${FILTER}" "${RAW}" > "${VALID}" && >&2 echo "Bad format." && exit 1
+
     # Compress to destination
     makeDirForFile "${DEST}"
     [[ $DEBUG  ]] && echo "Copying into ${DEST}"
