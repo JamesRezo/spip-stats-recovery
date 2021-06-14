@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Usage : poll [file]
-# Description : Get JSON files from https://stats.spip.net
+# Description : Get JSON files from https://contrib.spip.net
 # Needs curl, jq
 
 # shellcheck source=bin/tools.sh
@@ -15,7 +15,7 @@ echo "Doing one poll..."
 
 POLL_FILE=${1:-spip.json}
 
-STATS_SPIP_NET="https://stats.spip.net/spip.php?page=stats.json"
+STATS_SPIP_NET="https://contrib.spip.net/spip.php?page=stats.json"
 
 # Get SPIP Minor Versions exposed (x.y)
 # Stored as strings to avoid float to integer conversion: x.0 -> x

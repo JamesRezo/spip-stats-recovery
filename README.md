@@ -6,20 +6,20 @@ The objective of this tool is to recover data from the [SPIP statistics website]
 
 ```bash
 # Poll & Store changes if any is detected
-docker run -v $(pwd):/build jamesrezo/myspipnetstats
+docker run -v $(pwd):/build spip/stats-poller
 ```
 
 ```bash
 # Poll only
-docker run -v $(pwd):/build jamesrezo/myspipnetstats poll-only
+docker run -v $(pwd):/build spip/stats-poller poll-only
 ```
 
 ```bash
 # Display last poll summary
-docker run -v $(pwd):/build jamesrezo/myspipnetstats print
+docker run -v $(pwd):/build spip/stats-poller print
 ```
 
 ```bash
 # Compile archives in CSV Files
-docker run -v $(pwd):/build jamesrezo/myspipnetstats compile
+docker run -v $(pwd):/build spip/stats-poller compile
 ```
