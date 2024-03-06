@@ -1,4 +1,4 @@
-.PHONY: poll-only archive print compile
+.PHONY: poll-only archive print compile save
 
 archive: .polled
 	@archive spip.json php.json
@@ -12,6 +12,9 @@ print:
 
 compile:
 	@compile
+
+save:
+	@save
 
 .polled:
 	@poll spip.json

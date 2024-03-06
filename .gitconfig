@@ -1,0 +1,2 @@
+[core]
+	excludesfile = /root/.gitignore_global
