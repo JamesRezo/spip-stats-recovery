@@ -1,2 +1,2 @@
 [core]
-	excludesfile = /root/.gitignore_global
+	excludesfile = /home/poller/.gitignore_global
