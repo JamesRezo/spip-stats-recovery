@@ -4,7 +4,7 @@
 # Description : Transform JSON stats files into CSV files, date are stored in GMT Timezone
 # Needs jq
 
-SINCE=${1:-2022-02-23}
+SINCE=${1:-}
 
 # Lat commit formatted date
 LAST_COMMIT="$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y%m%d%H%M.%S)"
@@ -39,13 +39,14 @@ do
     jq --arg datetime "${datetime}" -r '.[]|[$datetime,"\""+.version+"\"",.sites]|join(",")' "$poll"
 done >> php.csv
 
+[ -z "${SINCE}" ] && SINCE="$(date +%Y-%m-%d)"
 FIRST="$(grep -n "${SINCE}" spip.csv | head -1 | cut -d: -f1)"
 [ "${FIRST}" != "" ] && {
     LINES="$(wc -l spip.csv | cut -d' ' -f1)"
     LAST="$(("${LINES}"-"${FIRST}"+1))"
     echo "date,version,sites"
     tail -n "${LAST}" spip.csv
-} > "spip.since-${SINCE}.csv"
+} > "spip.since-one-year.csv"
 
 FIRST="$(grep -n "${SINCE}" php.csv | head -1 | cut -d: -f1)"
 [ "${FIRST}" != "" ] && {
@@ -53,6 +54,6 @@ FIRST="$(grep -n "${SINCE}" php.csv | head -1 | cut -d: -f1)"
     LAST="$(("${LINES}"-"${FIRST}"+1))"
     echo "date,version,sites"
     tail -n "${LAST}" php.csv
-} > "php.since-${SINCE}.csv"
+} > "php.since-one-year.csv"
 
 exit 0
