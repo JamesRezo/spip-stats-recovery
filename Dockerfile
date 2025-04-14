@@ -1,6 +1,6 @@
 FROM alpine:3.21
 
-RUN apk add --no-cache bash make curl jq git && \
+RUN apk add --no-cache coreutils bash make curl jq git && \
     adduser --home /home/poller --shell /bin/bash --disabled-password poller poller
 
 COPY bin/tools.sh /usr/local/bin/tools

@@ -39,14 +39,22 @@ do
     jq --arg datetime "${datetime}" -r '.[]|[$datetime,"\""+.version+"\"",.sites]|join(",")' "$poll"
 done >> php.csv
 
-[ -z "${SINCE}" ] && SINCE="$(date +%Y-%m-%d)"
+[ -n "${SINCE}" ] && {
+    FILE="since-${SINCE}"
+}
+[ -z "${SINCE}" ] && {
+    SINCE="$(date -d "1 year ago" +%Y-%m-%d)"
+    FILE=since-one-year
+}
+[[ $DEBUG ]] && echo "since:$SINCE"
+
 FIRST="$(grep -n "${SINCE}" spip.csv | head -1 | cut -d: -f1)"
 [ "${FIRST}" != "" ] && {
     LINES="$(wc -l spip.csv | cut -d' ' -f1)"
     LAST="$(("${LINES}"-"${FIRST}"+1))"
     echo "date,version,sites"
     tail -n "${LAST}" spip.csv
-} > "spip.since-one-year.csv"
+} > "spip.${FILE}.csv"
 
 FIRST="$(grep -n "${SINCE}" php.csv | head -1 | cut -d: -f1)"
 [ "${FIRST}" != "" ] && {
@@ -54,6 +62,6 @@ FIRST="$(grep -n "${SINCE}" php.csv | head -1 | cut -d: -f1)"
     LAST="$(("${LINES}"-"${FIRST}"+1))"
     echo "date,version,sites"
     tail -n "${LAST}" php.csv
-} > "php.since-one-year.csv"
+} > "php.${FILE}.csv"
 
 exit 0
