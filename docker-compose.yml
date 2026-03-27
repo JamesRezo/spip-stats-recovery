@@ -1,4 +1,3 @@
-version: '2.0'
 services:
   poller:
     image: spip/stats-poller:latest

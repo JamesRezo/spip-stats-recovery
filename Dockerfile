@@ -1,4 +1,4 @@
-FROM alpine:3.21
+FROM alpine:3
 
 RUN apk add --no-cache coreutils bash make curl jq git && \
     adduser --home /home/poller --shell /bin/bash --disabled-password poller poller
